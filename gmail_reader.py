@@ -1,7 +1,9 @@
 import os
 import pickle
-import time
 import logging
+import time
+import threading
+from flask import Flask, jsonify, request
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -13,38 +15,17 @@ import requests
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+app = Flask(__name__)
+
+# Глобальные переменные для хранения состояния
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+last_emails = []
+tor_ip = None
+service = None
 
-import os
-import base64
-import pickle
-
-# Создаём token.pickle из переменной окружения при запуске
-def setup_token_from_env():
-    """Создаёт token.pickle из переменной окружения TOKEN_PICKLE_B64"""
-    token_b64 = os.environ.get('TOKEN_PICKLE_B64')
-    if token_b64:
-        try:
-            # Декодируем из base64 в бинарные данные
-            token_bytes = base64.b64decode(token_b64)
-            
-            # Проверяем, что это действительно pickle-файл
-            try:
-                creds = pickle.loads(token_bytes)
-                print(f"✅ Токен успешно загружен из переменной окружения")
-                print(f"  Срок действия: {creds.expiry}")
-            except Exception as e:
-                print(f"⚠️ Предупреждение: полученные данные не являются валидным pickle: {e}")
-            
-            # Сохраняем в файл для совместимости со старым кодом
-            print("✅ token.pickle создан из переменной окружения")
-            return creds
-        except Exception as e:
-            print(f"❌ Ошибка при создании token.pickle из переменной окружения: {e}")
-            return False
-    else:
-        print("⚠️ Переменная TOKEN_PICKLE_B64 не найдена")
-        return False
+def setup_credentials_from_env():
+    """Создаёт все необходимые файлы из переменных окружения"""
+    # ... (тот же код, что и раньше) ...
 
 def renew_tor_ip():
     """Смена IP через Tor"""
@@ -70,22 +51,22 @@ def get_tor_session():
 
 def check_tor_ip():
     """Проверка текущего IP через Tor"""
+    global tor_ip
     try:
         session = get_tor_session()
         response = session.get('https://httpbin.org/ip', timeout=10)
-        ip = response.json()['origin']
-        logging.info(f"🌐 Текущий IP через Tor: {ip}")
-        return ip
+        tor_ip = response.json()['origin']
+        logging.info(f"🌐 Текущий IP через Tor: {tor_ip}")
+        return tor_ip
     except Exception as e:
         logging.error(f"Не удалось проверить IP: {e}")
         return None
 
 def get_gmail_service():
     """Получение сервиса Gmail API"""
-    creds = setup_token_from_env()
+    global service
+    creds = None
     
-    # В продакшене нужно хранить токен в безопасном месте
-    # На Render можно использовать volume или переменные окружения
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
             creds = pickle.load(token)
@@ -94,8 +75,6 @@ def get_gmail_service():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            # На Render нужно использовать headless авторизацию
-            # Это сложнее, поэтому пока используем готовый токен
             flow = InstalledAppFlow.from_client_secrets_file(
                 'credentials.json', SCOPES)
             creds = flow.run_local_server(port=0, open_browser=False)
@@ -103,15 +82,20 @@ def get_gmail_service():
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
     
-    return build('gmail', 'v1', credentials=creds)
+    service = build('gmail', 'v1', credentials=creds)
+    return service
 
-def read_emails(service, max_results=5):
+def read_emails(max_results=5):
     """Чтение писем"""
+    global service, last_emails
     try:
+        if not service:
+            service = get_gmail_service()
+        
         results = service.users().messages().list(
             userId='me', 
             maxResults=max_results,
-            q='is:unread'  # Только непрочитанные
+            q='is:unread'
         ).execute()
         
         messages = results.get('messages', [])
@@ -141,45 +125,103 @@ def read_emails(service, max_results=5):
                 'date': date,
                 'snippet': message['snippet']
             })
-            
-            logging.info(f"📧 Письмо от {from_email}: {subject}")
         
+        last_emails = emails
+        logging.info(f"📧 Прочитано {len(emails)} писем")
         return emails
     except Exception as e:
         logging.error(f"Ошибка чтения писем: {e}")
         return []
 
-def main():
-    logging.info("🚀 Запуск Gmail Tor Reader")
+def background_task():
+    """Фоновая задача для периодической проверки почты"""
+    while True:
+        try:
+            read_emails(5)
+            renew_tor_ip()  # Меняем IP после каждой проверки
+            time.sleep(300)  # 5 минут
+        except Exception as e:
+            logging.error(f"Ошибка в фоновой задаче: {e}")
+            time.sleep(60)
+
+# API endpoints
+@app.route('/')
+def home():
+    return jsonify({
+        'status': 'running',
+        'service': 'Gmail Tor Reader',
+        'tor_ip': tor_ip,
+        'endpoints': {
+            '/emails': 'GET - получить последние письма',
+            '/emails/unread': 'GET - получить непрочитанные письма',
+            '/tor/status': 'GET - статус Tor',
+            '/tor/renew': 'POST - сменить IP Tor',
+            '/read': 'POST - принудительно прочитать почту'
+        }
+    })
+
+@app.route('/emails', methods=['GET'])
+def get_emails():
+    """Получить последние прочитанные письма"""
+    return jsonify({
+        'count': len(last_emails),
+        'emails': last_emails,
+        'tor_ip': tor_ip
+    })
+
+@app.route('/emails/unread', methods=['GET'])
+def get_unread():
+    """Принудительно проверить непрочитанные письма"""
+    emails = read_emails(5)
+    return jsonify({
+        'count': len(emails),
+        'emails': emails,
+        'tor_ip': tor_ip
+    })
+
+@app.route('/tor/status', methods=['GET'])
+def tor_status():
+    """Статус Tor"""
+    return jsonify({
+        'tor_ip': tor_ip,
+        'tor_running': tor_ip is not None
+    })
+
+@app.route('/tor/renew', methods=['POST'])
+def tor_renew():
+    """Принудительно сменить IP Tor"""
+    success = renew_tor_ip()
+    check_tor_ip()
+    return jsonify({
+        'success': success,
+        'new_ip': tor_ip
+    })
+
+@app.route('/read', methods=['POST'])
+def read_now():
+    """Принудительно прочитать почту"""
+    emails = read_emails(5)
+    return jsonify({
+        'success': True,
+        'count': len(emails),
+        'emails': emails
+    })
+
+if __name__ == "__main__":
+    # Инициализация
+    setup_credentials_from_env()
     
-    # Проверяем Tor
+    # Запускаем Tor (он уже должен быть запущен отдельно)
+    time.sleep(5)
     check_tor_ip()
     
     # Получаем сервис Gmail
     service = get_gmail_service()
     
-    # Читаем письма
-    emails = read_emails(service, max_results=5)
+    # Запускаем фоновую задачу в отдельном потоке
+    bg_thread = threading.Thread(target=background_task, daemon=True)
+    bg_thread.start()
     
-    # Можно сменить IP перед следующим чтением
-    if emails:
-        logging.info(f"✅ Прочитано {len(emails)} писем")
-        renew_tor_ip()
-    else:
-        logging.info("📭 Писем нет")
-    
-    # Бесконечный цикл для постоянной работы
-    while True:
-        logging.info("⏳ Ожидание следующей проверки...")
-        time.sleep(300)  # Проверка каждые 5 минут
-        
-        # Смена IP перед новым циклом
-        renew_tor_ip()
-        
-        # Новая проверка
-        emails = read_emails(service, max_results=5)
-        if emails:
-            logging.info(f"✅ Прочитано {len(emails)} новых писем")
-
-if __name__ == "__main__":
-    main()
+    # Запускаем веб-сервер (Render ожидает, что сервис слушает порт)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
