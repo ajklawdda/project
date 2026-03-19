@@ -15,4 +15,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Запускаем Tor и веб-сервер
-CMD tor & gunicorn gmail_reader:app --bind 0.0.0.0:$PORT
+CMD tor & gunicorn gmail_reader:app --bind 0.0.0.0:$PORT --timeout 0
