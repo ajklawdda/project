@@ -25,6 +25,67 @@ tor_ip = None
 service = None
 last_code = ""
 
+def setup_credentials_from_env():
+    """Создаёт credentials.json и token.pickle из переменных окружения"""
+    
+    # 1. Обрабатываем GOOGLE_CREDENTIALS (JSON строка)
+    google_creds_json = os.environ.get('GOOGLE_CREDENTIALS')
+    if google_creds_json:
+        try:
+            # Проверяем, что это валидный JSON
+            import json
+            creds_dict = json.loads(google_creds_json)
+            print(f"✅ GOOGLE_CREDENTIALS: валидный JSON, client_id: {creds_dict.get('installed', {}).get('client_id', 'не найден')[:20]}...")
+            
+            # Сохраняем в файл credentials.json
+            with open('credentials.json', 'w', encoding='utf-8') as f:
+                f.write(google_creds_json)
+            print("✅ credentials.json создан из GOOGLE_CREDENTIALS")
+            
+        except json.JSONDecodeError as e:
+            print(f"❌ GOOGLE_CREDENTIALS: невалидный JSON: {e}")
+            return False
+        except Exception as e:
+            print(f"❌ Ошибка при создании credentials.json: {e}")
+            return False
+    else:
+        # Проверяем, может файл уже существует
+        if os.path.exists('credentials.json'):
+            print("📁 credentials.json найден в файловой системе")
+        else:
+            print("⚠️ credentials.json не найден ни в переменных, ни в файлах")
+            return False
+    
+    # 2. Обрабатываем TOKEN_PICKLE_B64 (бинарный файл в base64)
+    token_b64 = os.environ.get('TOKEN_PICKLE_B64')
+    if token_b64:
+        try:
+            token_bytes = base64.b64decode(token_b64)
+            
+            # Проверяем валидность pickle
+            try:
+                creds = pickle.loads(token_bytes)
+                print(f"✅ Токен валиден, истекает: {getattr(creds, 'expiry', 'неизвестно')}")
+            except Exception as e:
+                print(f"⚠️ Предупреждение: токен может быть повреждён: {e}")
+            
+            # Сохраняем в файл
+            with open('token.pickle', 'wb') as f:
+                f.write(token_bytes)
+            print(f"✅ token.pickle создан из переменной окружения (размер: {len(token_bytes)} байт)")
+            
+        except Exception as e:
+            print(f"❌ Ошибка при создании token.pickle: {e}")
+            return False
+    else:
+        if os.path.exists('token.pickle'):
+            print("📁 token.pickle найден в файловой системе")
+        else:
+            print("⚠️ token.pickle не найден")
+            return False
+    
+    print("🎉 Все необходимые файлы успешно созданы!")
+    return True
 
 def setup_credentials_from_env():
     """Создаёт token.pickle из переменной окружения TOKEN_PICKLE_B64"""
@@ -146,11 +207,17 @@ def get_gmail_service():
     global service
     global creds
     creds = None
-
+    
+    # Убеждаемся, что credentials.json существует
+    if not os.path.exists('credentials.json'):
+        print("⚠️ credentials.json не найден, пробуем создать из переменных...")
+        if not setup_credentials_from_env():
+            raise Exception("Не удалось создать credentials.json")
+    
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
             creds = pickle.load(token)
-
+    
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -158,10 +225,10 @@ def get_gmail_service():
             flow = InstalledAppFlow.from_client_secrets_file(
                 'credentials.json', SCOPES)
             creds = flow.run_local_server(port=0, open_browser=False)
-
+        
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
-
+    
     service = build('gmail', 'v1', credentials=creds)
     return service
 
