@@ -87,29 +87,6 @@ def setup_credentials_from_env():
     print("🎉 Все необходимые файлы успешно созданы!")
     return True
 
-def setup_credentials_from_env():
-    """Создаёт token.pickle из переменной окружения TOKEN_PICKLE_B64"""
-    token_b64 = os.environ.get('TOKEN_PICKLE_B64')
-    if token_b64:
-        try:
-            token_bytes = base64.b64decode(token_b64)
-
-            try:
-                creds = pickle.loads(token_bytes)
-                print(f"✅ Токен успешно загружен из переменной окружения")
-                print(f"  Срок действия: {creds.expiry}")
-            except Exception as e:
-                print(f"⚠️ Предупреждение: полученные данные не являются валидным pickle: {e}")
-
-            print("✅ token.pickle создан из переменной окружения")
-            return creds
-        except Exception as e:
-            print(f"❌ Ошибка при создании token.pickle из переменной окружения: {e}")
-            return False
-    else:
-        print("⚠️ Переменная TOKEN_PICKLE_B64 не найдена")
-        return False
-
 
 def renew_tor_ip(delay=5):
     """Смена IP через Tor"""
