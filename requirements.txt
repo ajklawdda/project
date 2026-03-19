@@ -6,3 +6,5 @@ beautifulsoup4
 stem
 requests
 requests[socks]
+flask
+gunicorn
