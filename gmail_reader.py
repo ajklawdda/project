@@ -15,6 +15,37 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
+import os
+import base64
+import pickle
+
+# Создаём token.pickle из переменной окружения при запуске
+def setup_token_from_env():
+    """Создаёт token.pickle из переменной окружения TOKEN_PICKLE_B64"""
+    token_b64 = os.environ.get('TOKEN_PICKLE_B64')
+    if token_b64:
+        try:
+            # Декодируем из base64 в бинарные данные
+            token_bytes = base64.b64decode(token_b64)
+            
+            # Проверяем, что это действительно pickle-файл
+            try:
+                creds = pickle.loads(token_bytes)
+                print(f"✅ Токен успешно загружен из переменной окружения")
+                print(f"  Срок действия: {creds.expiry}")
+            except Exception as e:
+                print(f"⚠️ Предупреждение: полученные данные не являются валидным pickle: {e}")
+            
+            # Сохраняем в файл для совместимости со старым кодом
+            print("✅ token.pickle создан из переменной окружения")
+            return creds
+        except Exception as e:
+            print(f"❌ Ошибка при создании token.pickle из переменной окружения: {e}")
+            return False
+    else:
+        print("⚠️ Переменная TOKEN_PICKLE_B64 не найдена")
+        return False
+
 def renew_tor_ip():
     """Смена IP через Tor"""
     try:
@@ -51,7 +82,7 @@ def check_tor_ip():
 
 def get_gmail_service():
     """Получение сервиса Gmail API"""
-    creds = None
+    creds = setup_token_from_env()
     
     # В продакшене нужно хранить токен в безопасном месте
     # На Render можно использовать volume или переменные окружения
