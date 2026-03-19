@@ -145,6 +145,7 @@ def get_gmail_service():
     """Получение сервиса Gmail API"""
     global service
     global creds
+    creds = None
 
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
