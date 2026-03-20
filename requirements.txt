@@ -8,4 +8,3 @@ requests
 requests[socks]
 flask
 gunicorn
-subprocess
