@@ -122,6 +122,8 @@ def renew_tor_ip(delay=5):
     """Смена IP через Tor"""
     global recconections
     if recconections > 5:
+        logging.info("Перезапуская Tor")
+        recconections = 0
         return restart_tor()
     try:
         with Controller.from_port(port=9051) as controller:
