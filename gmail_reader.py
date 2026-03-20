@@ -247,11 +247,7 @@ def find_new_code():
     # Проверяем, не занят ли сервер
     with busy_lock:
         if is_busy:
-            return jsonify({
-                'error': 'Server is busy, request ignored',
-                'status': 'busy',
-                'message': 'Please try again later'
-            }), 429
+            return "busy"
         
         # Занимаем сервер
         is_busy = True
@@ -262,11 +258,7 @@ def find_new_code():
     thread.start()
     
     # Мгновенный ответ
-    return jsonify({
-        'status': 'accepted',
-        'message': 'Code finding started. New requests will be ignored until complete.',
-        'check_status_at': '/status'
-    }), 202
+    return "starting"
 
 @app.route("/status", methods=["GET"])
 def status():
