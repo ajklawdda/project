@@ -123,7 +123,7 @@ def restart_tor():
 def renew_tor_ip(delay=5):
     """Смена IP через Tor"""
     global reconnections
-    if reconnections > 50:
+    if reconnections > 30:
         logging.info("Перезапуская Tor")
         reconnections = 0
         return restart_tor()
