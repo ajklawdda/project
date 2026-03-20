@@ -167,7 +167,6 @@ def background_code_finder():
     global is_busy
     
     try:
-        print("🚀 Начинаю поиск кода...")
         
         # ВАШ КОД ИЗ find_new_code
         url = "https://hide-my-name.app/demo/success/"
@@ -181,10 +180,10 @@ def background_code_finder():
         
         ip = get_current_ip(proxies)
         if ip is None:
-            print("!!! ip is None")
+            logging.info("!!! ip is None")
             return
         
-        print("ip:", ip)
+        logging.info(f"ip: {ip}")
         need = 1
         delay = 5
         
@@ -194,7 +193,7 @@ def background_code_finder():
                 response1 = send_post_through_tor(data, url)
                 text = response1.text
                 ok = "выслан" in text
-                print("ok:", ok)
+                logging.info(f"ok: {ok}")
                 
                 while True:
                     did = renew_tor_ip(delay=delay)
@@ -204,28 +203,28 @@ def background_code_finder():
                             continue
                         else:
                             ip = new_ip
-                            print(f"Новый IP: {ip}")
+                            logging.info(f"Новый IP: {ip}")
                             break
-                    print("Trying again to find new ip")
+                    logging.info("Trying again to find new ip")
             
-            print(f"Код {i + 1} найден и отправлен на почту {data['demo_mail']}")
-            print("Попытка взять код:")
+            logging.info(f"Код {i + 1} найден и отправлен на почту {data['demo_mail']}")
+            logging.info("Попытка взять код:")
             
             for _ in range(3):
                 code = get_code_from_last_email()
                 if code in all_codes:
-                    print("Trying again")
+                    logging.info("Trying again")
                     time.sleep(5)
                     continue
                 else:
-                    print("Найден код:", code)
+                    logging.info(f"Найден код: {code}")
                     all_codes.append(code)
                     break
             else:
-                print("Не получилось извлечь код, пропустим шаг")
+                logging.info("Не получилось извлечь код, пропустим шаг")
         
-        print("Закончено, все коды:")
-        print("\n".join(all_codes))
+        logging.info("Закончено, все коды:")
+        logging.info("\n".join(all_codes))
         
         global last_code
         last_code = all_codes[0] if all_codes else ""
