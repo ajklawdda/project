@@ -29,6 +29,7 @@ last_emails = []
 tor_ip = None
 service = None
 last_code = ""
+reconnections = 0
 
 def setup_credentials_from_env():
     """Создаёт credentials.json и token.pickle из переменных окружения"""
@@ -93,14 +94,43 @@ def setup_credentials_from_env():
     return True
 
 
+def restart_tor():
+    """Перезапуск Tor внутри контейнера"""
+    try:
+        # Вариант 1: через systemctl (если Tor как служба)
+        subprocess.run(['systemctl', 'restart', 'tor'], 
+                      capture_output=True, timeout=10)
+        
+        # Вариант 2: через kill и запуск (если Tor запущен вручную)
+        # subprocess.run(['pkill', 'tor'], capture_output=True)
+        # time.sleep(2)
+        # subprocess.Popen(['tor', '-f', '/etc/tor/torrc'], 
+        #                 stdout=subprocess.DEVNULL, 
+        #                 stderr=subprocess.DEVNULL)
+        
+        time.sleep(10)  # Ждём полного запуска
+        logging.info("✅ Tor перезапущен")
+        return True
+        
+    except Exception as e:
+        logging.error(f"❌ Ошибка перезапуска Tor: {e}")
+        return False
+
+
+
 def renew_tor_ip(delay=5):
     """Смена IP через Tor"""
+    global recconections
+    if recconections > 5:
+        return restart_tor()
     try:
         with Controller.from_port(port=9051) as controller:
+
             controller.authenticate()
             controller.signal(Signal.NEWNYM)
             time.sleep(delay)
             logging.info("✅ IP изменён через Tor")
+            reconnections += 1
             return True
     except Exception as e:
         logging.error(f"❌ Ошибка смены IP: {e}")
