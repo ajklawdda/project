@@ -18,6 +18,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 app = Flask(__name__)
 
+logging.getLogger('stem').setLevel(logging.CRITICAL)
+logging.getLogger('stem.control').setLevel(logging.CRITICAL)
+logging.getLogger('stem.socket').setLevel(logging.CRITICAL)
+logging.getLogger('stem.connection').setLevel(logging.CRITICAL)
+
 # Глобальные переменные для хранения состояния
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 last_emails = []
