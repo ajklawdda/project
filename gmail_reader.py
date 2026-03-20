@@ -158,12 +158,6 @@ def read_emails(max_results=10, query=None):
 
     return emails
 
-import threading
-import time
-from flask import Flask, jsonify
-
-app = Flask(__name__)
-
 # Глобальный флаг
 is_busy = False
 busy_lock = threading.Lock()
@@ -341,7 +335,7 @@ def get_last_code():
 
 
 @app.route("/start-finding-new-code-old", methods=["GET"])
-def find_new_code():
+def find_new_code_old():
     url = "https://hide-my-name.app/demo/success/"
     data = {"demo_mail": "fhsjarij@gmail.com"}
     all_codes = []
