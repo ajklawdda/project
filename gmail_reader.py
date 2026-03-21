@@ -37,10 +37,11 @@ def get_tor_pid():
     """Получить PID Tor"""
     try:
         result = subprocess.run(['pgrep', 'tor'], capture_output=True, text=True)
+        logging.info(f"result: {result}")
         if result.returncode == 0:
             return result.stdout.strip()
     except Exception as e:
-        print(f"Ошибка при получении PID: {e}")
+        logging.error(f"Ошибка при получении PID: {e}")
     return None
 
 
@@ -134,13 +135,14 @@ def restart_tor():
 def renew_tor_ip(delay=5):
     """Смена IP через Tor"""
     global reconnections
-    if reconnections > 5:
-        logging.info("Перезапуская Tor")
+    if reconnections >= 5:
+        logging.info("Перезапуск Tor")
         reconnections = 0
         old_pid = get_tor_pid()
+        logging.info(f"old-pid: {old_pid}")
         result = restart_tor()
         new_pid = get_tor_pid()
-        logging.info(f"old-pid: {old_pid}; new-pid: {new_pid}")
+        logging.info(f"new-pid: {new_pid}")
         return result
     try:
         with Controller.from_port(port=9051) as controller:
