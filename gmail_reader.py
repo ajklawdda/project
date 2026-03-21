@@ -135,7 +135,7 @@ def restart_tor():
 def renew_tor_ip(delay=5):
     """Смена IP через Tor"""
     global reconnections
-    if reconnections >= 5:
+    if reconnections >= 1:
         logging.info("Перезапуск Tor")
         reconnections = 0
         old_pid = get_tor_pid()
