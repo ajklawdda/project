@@ -33,6 +33,17 @@ last_code = ""
 reconnections = 0
 
 
+def get_tor_pid():
+    """Получить PID Tor"""
+    try:
+        result = subprocess.run(['pgrep', 'tor'], capture_output=True, text=True)
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except Exception as e:
+        print(f"Ошибка при получении PID: {e}")
+    return None
+
+
 def setup_credentials_from_env():
     """Создаёт credentials.json и token.pickle из переменных окружения"""
 
@@ -123,10 +134,14 @@ def restart_tor():
 def renew_tor_ip(delay=5):
     """Смена IP через Tor"""
     global reconnections
-    if reconnections > 30:
+    if reconnections > 5:
         logging.info("Перезапуская Tor")
         reconnections = 0
-        return restart_tor()
+        old_pid = get_tor_pid()
+        result = restart_tor()
+        new_pid = get_tor_pid()
+        logging.info(f"old-pid: {old_pid}; new-pid: {new_pid}")
+        return result
     try:
         with Controller.from_port(port=9051) as controller:
 
