@@ -140,20 +140,10 @@ def restart_tor():
 def renew_tor_ip(delay=5):
     """Смена IP через Tor"""
     global reconnections
-    if reconnections >= 1:
+    if reconnections >= 30:
         logging.info("Перезапуск Tor")
         reconnections = 0
-        logging.info("!!!!")
-        proxies = {
-            'http': 'socks5h://127.0.0.1:9050',
-            'https': 'socks5h://127.0.0.1:9050'
-        }
-        old_pid = get_current_ip(proxies)
-        logging.info("!!!!")
-        logging.info(f"old-pid: {old_pid}")
         result = restart_tor()
-        new_pid = get_current_ip(proxies)
-        logging.info(f"new-pid: {new_pid}")
         return result
     try:
         with Controller.from_port(port=9051) as controller:
