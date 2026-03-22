@@ -110,7 +110,7 @@ def setup_credentials_from_env():
 
 
 def restart_tor():
-        """Перезапуск Tor на Render (рабочий способ)"""
+    """Перезапуск Tor на Render (рабочий способ)"""
     
     # 1. Находим все PID Tor
     try:
