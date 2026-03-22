@@ -110,63 +110,22 @@ def setup_credentials_from_env():
 
 
 def restart_tor():
-    """Перезапуск Tor на Render (рабочий способ)"""
-    
-    # 1. Находим все PID Tor
+    """Перезапуск Tor внутри контейнера"""
     try:
-        result = subprocess.run(['pgrep', 'tor'], capture_output=True, text=True)
-        if result.returncode == 0:
-            pids = result.stdout.strip().split()
-            print(f"Найдены PID Tor: {pids}")
-            
-            # 2. Убиваем все процессы Tor
-            for pid_str in pids:
-                try:
-                    pid = int(pid_str)
-                    print(f"Убиваю процесс {pid}")
-                    os.kill(pid, signal.SIGTERM)  # Вежливо просим завершиться
-                except Exception as e:
-                    print(f"Ошибка при убийстве {pid}: {e}")
-        else:
-            print("Tor процесс не найден")
+        
+        subprocess.run(['pkill', 'tor'], capture_output=True)
+        time.sleep(2)
+        subprocess.Popen(['tor', '-f', '/etc/tor/torrc'], 
+                        stdout=subprocess.DEVNULL, 
+                        stderr=subprocess.DEVNULL)
+        
+        time.sleep(10)  # Ждём полного запуска
+        logging.info("✅ Tor перезапущен")
+        return True
+        
     except Exception as e:
-        print(f"Ошибка поиска PID: {e}")
-    
-    # 3. Ждём, пока процессы завершатся
-    print("Жду завершения Tor...")
-    time.sleep(3)
-    
-    # 4. Запускаем Tor заново
-    print("Запускаю новый Tor...")
-    subprocess.Popen(
-        ['tor', '-f', '/etc/tor/torrc'],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True
-    )
-    
-    # 5. Ждём инициализации
-    print("Жду запуска Tor...")
-    time.sleep(10)
-    
-    # 6. Проверяем, что Tor работает
-    try:
-        result = subprocess.run(['pgrep', 'tor'], capture_output=True, text=True)
-        if result.returncode == 0:
-            new_pids = result.stdout.strip().split()
-            print(f"Новые PID Tor: {new_pids}")
-            
-            # Проверяем, что PID изменились
-            if set(pids) != set(new_pids):
-                print("✅ Tor успешно перезапущен!")
-                return True
-            else:
-                print("⚠️ PID не изменились, возможно Tor не перезапустился")
-                return False
-    except Exception as e:
-        print(f"Ошибка проверки: {e}")
-    
-    return False
+        logging.error(f"❌ Ошибка перезапуска Tor: {e}")
+        return False
 
 
 def renew_tor_ip(delay=5):
