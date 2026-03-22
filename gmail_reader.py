@@ -134,10 +134,10 @@ def renew_tor_ip(delay=5):
     if reconnections >= 1:
         logging.info("Перезапуск Tor")
         reconnections = 0
-        old_pid = get_tor_pid()
+        old_pid = get_current_ip()
         logging.info(f"old-pid: {old_pid}")
         result = restart_tor()
-        new_pid = get_tor_pid()
+        new_pid = get_current_ip()
         logging.info(f"new-pid: {new_pid}")
         return result
     try:
