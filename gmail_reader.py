@@ -33,6 +33,15 @@ last_code = ""
 reconnections = 0
 
 
+def get_current_ip(proxies):
+    """Получить текущий IP через Tor"""
+    try:
+        response = requests.get('https://httpbin.org/ip', proxies=proxies, timeout=10)
+        return response.json()['origin']
+    except:
+        return None
+
+
 def get_tor_pid():
     """Получить PID Tor"""
     try:
@@ -134,10 +143,16 @@ def renew_tor_ip(delay=5):
     if reconnections >= 1:
         logging.info("Перезапуск Tor")
         reconnections = 0
-        old_pid = get_current_ip()
+        logging.info("!!!!")
+        proxies = {
+            'http': 'socks5h://127.0.0.1:9050',
+            'https': 'socks5h://127.0.0.1:9050'
+        }
+        old_pid = get_current_ip(proxies)
+        logging.info("!!!!")
         logging.info(f"old-pid: {old_pid}")
         result = restart_tor()
-        new_pid = get_current_ip()
+        new_pid = get_current_ip(proxies)
         logging.info(f"new-pid: {new_pid}")
         return result
     try:
@@ -151,15 +166,6 @@ def renew_tor_ip(delay=5):
     except Exception as e:
         logging.error(f"❌ Ошибка смены IP: {e}")
         return False
-
-
-def get_current_ip(proxies):
-    """Получить текущий IP через Tor"""
-    try:
-        response = requests.get('https://httpbin.org/ip', proxies=proxies, timeout=10)
-        return response.json()['origin']
-    except:
-        return None
 
 
 def read_emails(max_results=10, query=None):
