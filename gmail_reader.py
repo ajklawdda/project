@@ -3,6 +3,8 @@ import pickle
 import logging
 import time
 import base64
+import imaplib
+import email
 import threading
 import subprocess
 from flask import Flask, jsonify, request
@@ -31,6 +33,34 @@ tor_ip = None
 service = None
 last_code = ""
 reconnections = 0
+
+
+def get_last_email():
+    IMAP_SERVER = 'imap.gmail.com'
+    IMAP_PORT = 993
+
+    email_address = "fhsjarij@gmail.com"
+    app_password = os.environ.get("APP_PASSWORD")
+
+    mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
+    mail.login(email_address, app_password)
+    mail.select('inbox')
+
+    status, messages = mail.search(None, f'(FROM "hidemy.name")')
+
+    if status == 'OK':
+        email_id = messages[0].split()[-1]
+        status, msg_data = mail.fetch(email_id, '(RFC822)')
+        if status == 'OK':
+            msg = email.message_from_bytes(msg_data[0][1])
+            subject = email.header.decode_header(msg['Subject'])[0][0]
+            code = subject.decode("utf-8")
+            code = code[code.find(":") + 1:].strip()
+
+    mail.close()
+    mail.logout()
+
+    return code
 
 
 def get_current_ip(proxies):
@@ -424,7 +454,7 @@ def find_new_code_old():
         print("Попытка взять код:")
 
         for _ in range(3):
-            code = get_code_from_last_email()
+            code = get_last_email()
             if code in all_codes:
                 print("Trying again")
                 time.sleep(5)
