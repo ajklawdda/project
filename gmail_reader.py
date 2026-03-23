@@ -214,6 +214,7 @@ busy_lock = threading.Lock()
 def background_code_finder():
     """Вся логика поиска кода в фоне"""
     global is_busy
+    global service
 
     try:
 
@@ -260,15 +261,19 @@ def background_code_finder():
             logging.info("Попытка взять код:")
 
             for _ in range(3):
-                code = get_code_from_last_email()
-                if code in all_codes:
-                    logging.info("Trying again")
-                    time.sleep(5)
-                    continue
-                else:
-                    logging.info(f"Найден код: {code}")
-                    all_codes.append(code)
-                    break
+                try:
+                    code = get_code_from_last_email()
+                    if code in all_codes:
+                        logging.info("Trying again")
+                        time.sleep(5)
+                        continue
+                    else:
+                        logging.info(f"Найден код: {code}")
+                        all_codes.append(code)
+                        break
+                except Exception as e:
+                    logging.error(e)
+                    service = get_gmail_service()
             else:
                 logging.info("Не получилось извлечь код, пропустим шаг")
 
