@@ -244,7 +244,6 @@ busy_lock = threading.Lock()
 def background_code_finder():
     """Вся логика поиска кода в фоне"""
     global is_busy
-    global service
 
     try:
 
@@ -292,6 +291,7 @@ def background_code_finder():
 
             for _ in range(3):
                 try:
+                    logging.info(f"Попытка номер: {_ + 1}")
                     code = get_last_email()
                     if code in all_codes:
                         logging.info("Trying again")
