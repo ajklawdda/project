@@ -41,7 +41,6 @@ def get_last_email():
 
     email_address = "fhsjarij@gmail.com"
     app_password = os.environ.get("APP_PASSWORD")
-    logging.info(f"{os.emviron,get("APP_PASSWORD")[:8]}, {len(os.emviron,get("APP_PASSWORD"))}")
 
     mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
     mail.login(email_address, app_password)
@@ -476,13 +475,9 @@ def find_new_code_old():
 
 if __name__ == "__main__":
     # Инициализация
-    creds = setup_credentials_from_env()
 
     # Запускаем Tor (он уже должен быть запущен отдельно)
     time.sleep(5)
-
-    # Получаем сервис Gmail
-    service = get_gmail_service()
 
     # Запускаем веб-сервер (Render ожидает, что сервис слушает порт)
     port = int(os.environ.get('PORT', 10000))
