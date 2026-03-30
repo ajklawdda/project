@@ -41,6 +41,7 @@ def get_last_email():
 
     email_address = "fhsjarij@gmail.com"
     app_password = os.environ.get("APP_PASSWORD")
+    logging.info(f"{os.emviron,get("APP_PASSWORD")[:8]}, {len(os.emviron,get("APP_PASSWORD"))}")
 
     mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
     mail.login(email_address, app_password)
