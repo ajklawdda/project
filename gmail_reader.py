@@ -292,7 +292,7 @@ def background_code_finder():
 
             for _ in range(3):
                 try:
-                    code = get_code_from_last_email()
+                    code = get_last_email()
                     if code in all_codes:
                         logging.info("Trying again")
                         time.sleep(5)
@@ -303,7 +303,6 @@ def background_code_finder():
                         break
                 except Exception as e:
                     logging.error(e)
-                    service = get_gmail_service()
             else:
                 logging.info("Не получилось извлечь код, пропустим шаг")
 
