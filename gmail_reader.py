@@ -408,7 +408,9 @@ def get_gmail_service():
 @app.route("/get-last-code", methods=["GET"])
 def get_last_code():
     global last_code
-    return last_code
+    temp = last_code
+    last_code = ""
+    return temp
 
 
 @app.route("/start-finding-new-code-old", methods=["GET"])
