@@ -273,6 +273,7 @@ def background_code_finder():
                 text = response1.text
                 ok = "выслан" in text
                 logging.info(f"ok: {ok}")
+                logging.info(f"{text}")
 
                 while True:
                     did = renew_tor_ip(delay=delay)
