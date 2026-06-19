@@ -481,5 +481,5 @@ if __name__ == "__main__":
     time.sleep(5)
 
     # Запускаем веб-сервер (Render ожидает, что сервис слушает порт)
-    # port = int(os.environ.get('PORT', 10000))
-    # app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
