@@ -155,6 +155,7 @@ def background_code_finder():
 
         url = "https://hide-my-name.cc/demo/success/"
         data["demo_mail"] = get_new_duck_email()
+        logging(f"Почта: {data['demo_mail']}")
 
         proxies = {
             'http': 'socks5h://127.0.0.1:9050',
@@ -168,6 +169,7 @@ def background_code_finder():
 
         logging.info(f"ip: {ip}")
         delay = 5
+        number_of_try = 0
 
         ok = False
         while not ok:
@@ -187,6 +189,12 @@ def background_code_finder():
                         logging.info(f"Новый IP: {ip}")
                         break
                 logging.info("Trying again to find new ip")
+
+            number_of_try += 1
+            if number_of_try > 10:
+                number_of_try = 0
+                data["demo_mail"] = get_new_duck_email()
+                logging(f"Новая почта: {data['demo_mail']}")
 
         logging.info(f"Код найден и отправлен на почту {data['demo_mail']}")
         logging.info("Попытка взять код:")
