@@ -144,6 +144,7 @@ def get_new_duck_email():
         "Authorization": os.environ.get("DUCK_PASSWORD"),
     }).json()["address"] + "@duck.com"
     if prob_email == last_email:
+        time.sleep(10)
         return get_new_duck_email()
     last_email = prob_email
     return prob_email
