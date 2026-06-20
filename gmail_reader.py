@@ -174,7 +174,6 @@ def background_code_finder():
             response1 = send_post_through_tor(data, url)
             text = response1.text
             ok = "Тестовый доступ уже был запрошен ранее" not in text
-            logging.info(f"{text}")
             logging.info(f"ok: {ok}")
 
             while True:
