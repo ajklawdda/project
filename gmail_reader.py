@@ -199,7 +199,7 @@ def background_code_finder():
                 logging.info("Trying again to find new ip")
 
             number_of_try += 1
-            if number_of_try > 10:
+            if number_of_try > 40:
                 number_of_try = 0
                 data["demo_mail"] = get_new_duck_email()
                 logging.info(f"Новая почта: {data['demo_mail']}")
