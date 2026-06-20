@@ -122,7 +122,7 @@ def renew_tor_ip(delay=5):
             return False
 
 
-def send_post_through_tor(data, url):
+def send_post_through_tor(data, url, headers=None):
     """Отправить POST-запрос через Tor"""
     proxies = {
         'http': 'socks5h://127.0.0.1:9050',
@@ -132,7 +132,7 @@ def send_post_through_tor(data, url):
     session = requests.Session()
     session.proxies = proxies
     session.keep_alive = False
-    response = session.post(url, data=data, timeout=10)
+    response = session.post(url, data=data, timeout=10, headers=headers)
     session.close()
     return response
 
@@ -140,7 +140,7 @@ def send_post_through_tor(data, url):
 def get_new_duck_email():
     global last_email
     logging.info(f"get_new_duck_email: started, last_email: {last_email}")
-    prob_email = requests.post("https://quack.duckduckgo.com/api/email/addresses", headers={
+    prob_email = send_post_through_tor(None, "https://quack.duckduckgo.com/api/email/addresses", {
         "Authorization": os.environ.get("DUCK_PASSWORD"),
     }).json()["address"] + "@duck.com"
     if prob_email == last_email:
