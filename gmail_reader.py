@@ -271,9 +271,7 @@ def status():
 @app.route("/get-last-code", methods=["GET"])
 def get_last_code():
     global last_code
-    temp = last_code
-    last_code = ""
-    return temp
+    return last_code
 
 
 if __name__ == "__main__":
