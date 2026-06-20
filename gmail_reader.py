@@ -25,6 +25,7 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 last_emails = []
 tor_ip = None
 service = None
+data = {}
 last_code = ""
 reconnections = 0
 
