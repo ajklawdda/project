@@ -273,8 +273,12 @@ if __name__ == "__main__":
     # Инициализация
 
     # Запускаем Tor (он уже должен быть запущен отдельно)
-    time.sleep(5)
+    # time.sleep(5)
 
-    # Запускаем веб-сервер (Render ожидает, что сервис слушает порт)
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    # # Запускаем веб-сервер (Render ожидает, что сервис слушает порт)
+    # port = int(os.environ.get('PORT', 10000))
+    # app.run(host='0.0.0.0', port=port)
+    print(get_new_duck_email())
+    print(get_new_duck_email())
+    print(get_new_duck_email())
+    print(get_new_duck_email())
