@@ -28,6 +28,7 @@ service = None
 data = {}
 last_code = ""
 reconnections = 0
+last_email = ""
 
 
 def get_last_email():
@@ -137,9 +138,15 @@ def send_post_through_tor(data, url):
 
 
 def get_new_duck_email():
-    return requests.post("https://quack.duckduckgo.com/api/email/addresses", headers={
+    global last_email
+    logging.info(f"get_new_duck_email: started, last_email: {last_email}")
+    prob_email = requests.post("https://quack.duckduckgo.com/api/email/addresses", headers={
         "Authorization": os.environ.get("DUCK_PASSWORD"),
     }).json()["address"] + "@duck.com"
+    if prob_email == last_email:
+        return get_new_duck_email()
+    last_email = prob_email
+    return prob_email
 
 
 # Глобальный флаг
@@ -273,12 +280,8 @@ if __name__ == "__main__":
     # Инициализация
 
     # Запускаем Tor (он уже должен быть запущен отдельно)
-    # time.sleep(5)
+    time.sleep(5)
 
-    # # Запускаем веб-сервер (Render ожидает, что сервис слушает порт)
-    # port = int(os.environ.get('PORT', 10000))
-    # app.run(host='0.0.0.0', port=port)
-    logging.info(get_new_duck_email())
-    logging.info(get_new_duck_email())
-    logging.info(get_new_duck_email())
-    logging.info(get_new_duck_email())
+    # Запускаем веб-сервер (Render ожидает, что сервис слушает порт)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
