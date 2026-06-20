@@ -153,8 +153,7 @@ def background_code_finder():
     try:
 
         url = "https://hide-my-name.cc/demo/success/"
-        data = {"demo_mail": "fhsjarij@gmail.com"}
-        all_codes = []
+        data["demo_mail"] = get_new_duck_email()
 
         proxies = {
             'http': 'socks5h://127.0.0.1:9050',
