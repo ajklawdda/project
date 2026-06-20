@@ -188,7 +188,7 @@ def background_code_finder():
                         break
                 logging.info("Trying again to find new ip")
 
-        logging.info(f"Код {i + 1} найден и отправлен на почту {data['demo_mail']}")
+        logging.info(f"Код найден и отправлен на почту {data['demo_mail']}")
         logging.info("Попытка взять код:")
 
         for _ in range(3):
