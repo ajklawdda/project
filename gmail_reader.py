@@ -142,6 +142,7 @@ def get_new_duck_email():
     logging.info(f"get_new_duck_email: started, last_email: {last_email}")
     prob_email = send_post_through_tor(None, "https://quack.duckduckgo.com/api/email/addresses", {
         "Authorization": os.environ.get("DUCK_PASSWORD"),
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
     }).json()["address"] + "@duck.com"
     if prob_email == last_email:
         time.sleep(10)
