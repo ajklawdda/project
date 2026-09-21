@@ -34,6 +34,7 @@ duck_passwords = [os.environ.get("DUCK_PASSWORD")]
 
 
 def get_duck_password():
+    global ct_for_duck_password
     ret = duck_passwords[ct_for_duck_password]
     ct_for_duck_password += 1
     if ct_for_duck_password >= len(duck_passwords):
@@ -238,15 +239,16 @@ def background_code_finder():
 
         last_code = code
 
-        print("✅ Поиск кода завершён")
+        #print("✅ Поиск кода завершён")
+        logging.info("Поиск кода завершен")
 
     except Exception as e:
-        print(f"❌ Ошибка в фоновой задаче: {e}")
+        logging.info(f"Ошибка в фоновой задаче: {e}")
     finally:
         # ВАЖНО: освобождаем флаг
         with busy_lock:
             is_busy = False
-            print("🔓 Сервер снова свободен")
+            logging.info("Сервер снова свободен")
 
 
 @app.route("/start-finding-new-code", methods=["GET"])
