@@ -173,7 +173,7 @@ def background_code_finder():
 
     try:
 
-        url = "https://hide-my-name.cc/demo/success/"
+        url = "https://hide-my-name.me/demo/success/"
         data["demo_mail"] = get_new_duck_email()
         logging.info(f"Почта: {data['demo_mail']}")
 
